@@ -26,6 +26,8 @@ from glob import glob
 from tqdm import tqdm
 import fire
 import numpy as np
+from evaluate import main as evaluate_main
+
 
 
 def compute_ndcg_from_json(json_path, item_file):
@@ -77,7 +79,6 @@ def compute_ndcg_from_json(json_path, item_file):
 def evaluate_checkpoint(checkpoint, data_file, info_file, category,
                         batch_size=8, num_beams=20, max_new_tokens=128):
     """Evaluate a checkpoint using evaluate.py"""
-    from evaluate import main as evaluate_main
 
     # Create temporary file for results
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
