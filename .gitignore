@@ -1,0 +1,29 @@
+
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Data and output directories
+data/
+output_dir/
+wandb/
+
+# Experiment logs
+exp*.log
+*.log
+
+
+# Model checkpoints and weights
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.pb
+*.bin
+*.safetensors

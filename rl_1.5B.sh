@@ -8,14 +8,14 @@ for category in "Industrial_and_Scientific"; do
     info_file=$(ls -f ./data/Amazon/info/${category}*.txt)
 
     accelerate launch \
-                    --config_file ./config/zero2_opt.yaml \
-                    --num_processes 8 --main_process_port 29503 \
-                    rl.py \
+            --config_file ./config/zero2_opt.yaml \
+            --num_processes 4 --main_process_port 29503 \
+            rl.py \
         --model_path output_dir/Qwen2.5-1.5B_sft_2/checkpoint-375 \
-        --train_batch_size 64 \
-        --eval_batch_size 128 \
+        --train_batch_size 32 \
+        --eval_batch_size 64 \
         --num_train_epochs 1 \
-        --gradient_accumulation_steps 2 \
+        --gradient_accumulation_steps 4 \
         --train_file ${train_file} \
         --eval_file ${eval_file} \
         --info_file ${info_file} \
@@ -34,8 +34,9 @@ for category in "Industrial_and_Scientific"; do
         --add_gt False \
         --beta 1e-3 \
         --dapo False \
-        --output_dir output_dir \
-        --wandb_run_name wandb_name \
+        --output_dir output_dir/Qwen2.5-1.5B_rl \
+        --wandb_project MiniOneRec_Qwen2.5-1.5B \
+        --wandb_run_name rl_4x6000_ep1 \
         --sid_index_path ./data/Amazon/index/Industrial_and_Scientific.index.json \
         --item_meta_path ./data/Amazon/index/Industrial_and_Scientific.item.json
 done

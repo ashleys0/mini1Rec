@@ -1,0 +1,2 @@
+model_path	ndcg@5_val	ndcg@10_val	ndcg@5_test	ndcg@10_test
+./output_dir/Qwen2.5-1.5B_RL/ep4/checkpoint-495	0.09477960497512121	0.09969205104822938	0.08970108216628829	0.09641117787772469

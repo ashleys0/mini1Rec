@@ -15,7 +15,7 @@ import math
 import json
 from sklearn.metrics import ndcg_score
 
-os.environ['WANDB_MODE'] = 'disabled'
+# os.environ['WANDB_MODE'] = 'disabled'
 
 def set_seed(seed):
     random.seed(seed)
@@ -258,7 +258,7 @@ def train(
         reward_fun = cf_reward
     
     os.environ['WANDB_PROJECT'] = wandb_project
-    os.environ["WANDB_MODE"] = "offline"
+    os.environ["WANDB_MODE"] = "online"
 
     training_args = GRPOConfig(output_dir=output_dir,
                                 save_steps=0.1,
@@ -280,7 +280,8 @@ def train(
                                 num_train_epochs=num_train_epochs,
                                 bf16=True,
                                 optim="paged_adamw_32bit",
-                                lr_scheduler_type="cosine", 
+                                lr_scheduler_type="cosine_with_min_lr", 
+                                lr_scheduler_kwargs={"min_lr": learning_rate * 0.1},
                                 save_strategy="steps",
                                 report_to="wandb",
                                 run_name=wandb_run_name,
