@@ -4,7 +4,7 @@
 2. `rq/text2emb/qwen3_text2emb.py` → `<cat>.emb-qwen-td.npy` (encode w Qwen3-emb 8B)
 3. `rq/opq.py` (or `rq/rqvae.py` `rqkmeans_*.py`) → `<cat>.index.json` (item emb → semantic tokens)
 4. `convert_dataset.py` → MiniOneRec training format
-5. SFT
+5. SFT (use backbone: Qwen/Qwen3-4B-Instruct-2507)
 6. RL
 
 
@@ -21,6 +21,8 @@
 
 
 set seed: 22
+encoder: Qwen/Qwen3-Embedding-8B
+
 ---
 
 copied from MiniOneRec:
