@@ -1,44 +1,45 @@
-<div align="center">
+## pipeline order
+
+1. `data/amazon23_data_process.py` → `Amazon23/<cat>/<cat>.item.json` (+ inter/review/id files)
+2. `rq/text2emb/qwen3_text2emb.py` → `<cat>.emb-qwen-td.npy` (encode w Qwen3-emb 8B)
+3. `rq/opq.py` (or `rq/rqvae.py` `rqkmeans_*.py`) → `<cat>.index.json` (item emb → semantic tokens)
+4. `convert_dataset.py` → MiniOneRec training format
+5. SFT
+6. RL
 
 
-<img src="./assets/logo.png" width="500em" ></img> 
 
+6.24 수 ~ 6.25
+- encode amzn metadata with Qwen3 emb 8B. 
+- m1Rec/rq/text2emb/qwen3_text2emb.py + qwen3_text2emb.sh — encodes item text with Qwen3-Embedding-8B and writes the embedding matrix the RQ stage consumes.
+- wrote `opq.py` -- takes the emb and uses OPQ to construct SID.
+
+2026.06.23 화
+- based on MiniOneRec code from 2025.12, lightly adapted for usage with A6000
+- create `data/amazon23_data_process.py` based on the amzn 18 original. amzn23 logistics are informed by data code from Latte.
+     - with modified preprocessing from original: item history truncation 10 -> 50; doesn't filter out titles longer than 50; 
+
+
+set seed: 22
+---
+
+copied from MiniOneRec:
 **An Open-Source Framework for
 Scaling Generative Recommendation**
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)
-<a href="https://arxiv.org/abs/2510.24431"><img src="https://img.shields.io/static/v1?label=arXiv&message=Paper&color=red"></a>
-
-<a href="https://arxiv.org/abs/2510.24431">📄 Technical Report</a> | <a href="https://huggingface.co/kkknight/MiniOneRec">🤗 Huggingface</a> | <a href="https://modelscope.cn/models/k925238839/MiniOneRec">🤖  Modelscope</a>
-</div>
 
 **MiniOneRec** is the first fully open-source **generative recommendation** framework, which provides an end-to-end workflow spanning **SID construction**, **supervised fine-tuning (SFT)**, and recommendation-oriented **reinforcement learning (RL)**. 
 
 ---
 
-## 📢 Announcement
+###  Announcement
 
 - 2025-11-20 — The SID construction method in **RQ-Kmeans+** has been updated (first proposed in **GPR** and this is the first open-source reproduction).
 
 - 2025-11-19 — We implemented a multi-GPU parallel text-to-embedding method based on Accelerate, which is significantly more efficient than the original version: rq/text2emb/amazon_text2emb.py
-
-- 2025-11-19 — The SID construction method in **constrained-RQ-Kmeans** has been updated.
-
-- 2025-11-07 — Thank you for submitting issues! Based on your feedback, we have released a new implementation. If you encounter any problems while running the code, please update to and consult the **latest version** first.
-  
-- 2025-11-07 — You can now choose to freeze the LLM parameters during the SFT stage and train only the embeddings for the newly added SID vocabulary.
-
-- 2025-10-31 — You can now directly download the implementation **checkpoints** of our MiniOnRec model.
-
-- 2025-10-31 — The SID construction method in **RQ-Kmeans** has been updated.
-
 ---
 
 ## 🛠️ Key Techniques 
-<div align="center">
-<img src="./assets/minionerec_framework.png" width=100% ></img> 
-</div>
 
 - **SID Construction: MiniOneRec begins by transforming every product into a compact, semantically meaningful token.** It concatenates an item’s title and description, feeds this sentence through a frozen text encoder, and then quantises the resulting embedding with a three-level RQ-VAE.
 
@@ -48,13 +49,6 @@ Scaling Generative Recommendation**
 
 ---
 
-## 📊 Evaluation
-
-<div align="center">
-<img src="./assets/minionerec_main_result.png" width=100% ></img> 
-</div>
-
----
 
 ## 🗂️ Repository Overview
 
