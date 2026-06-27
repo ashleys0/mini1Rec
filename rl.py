@@ -15,6 +15,8 @@ import math
 import json
 from sklearn.metrics import ndcg_score
 
+
+
 # os.environ['WANDB_MODE'] = 'disabled'
 
 def set_seed(seed):
@@ -305,7 +307,51 @@ def train(
         args=training_args,
     )
 
+
+    ##
+    from exploration_tracking import TailEvalSplitter
+
+    splitter = TailEvalSplitter(
+        train_file=train_file,
+        info_file=info_file,
+        history2target=history2target,
+        tail_percentile=0.5,
+    )
+
+    head_eval, tail_eval = splitter.split_eval_dataset(eval_dataset, prompt2history)
+
+
     trainer.train()
+
+    ##
+    # After training, evaluate on each split:
+    if head_eval is not None:
+        results_head = trainer.evaluate(head_eval)
+        print(f"Head eval: {results_head}")
+
+    if tail_eval is not None:
+        results_tail = trainer.evaluate(tail_eval)
+        print(f"Tail eval: {results_tail}")
+
+    ##
+    # Save exploration tracking data
+    tracker_path = os.path.join(output_dir, "exploration_tracking.json")
+    trainer.rollout_tracker.save(tracker_path)
+
+    # Print summary report
+    report = trainer.rollout_tracker.get_detailed_report()
+    print(f"\n{'='*60}")
+    print(f"EXPLORATION TRACKING SUMMARY ({len(report)} tracked users)")
+    print(f"{'='*60}")
+    for entry in report[:10]:  # top 10 most concentrated
+        print(f"  Target: {entry['target']}")
+        print(f"  Steps seen: {entry['steps_seen']}")
+        print(f"  Cumulative unique items: {entry['cumulative_unique_items']}")
+        print(f"  Target in rollout rate: {entry['target_in_rollout_rate']:.3f}")
+        print(f"  Top-5 concentration: {entry['top5_concentration']:.3f}")
+        print(f"  Mean unique/rollout: {entry['mean_unique_per_rollout']:.1f}")
+        print(f"  Top items: {entry['top_items'][:5]}")
+        print()
 
     trainer.save_model(output_dir)
 

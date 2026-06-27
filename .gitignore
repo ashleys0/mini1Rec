@@ -10,7 +10,10 @@ __pycache__/
 .DS_Store
 
 # Data and output directories
-data/
+data/**
+!data/**/
+!data/**/*.py
+!data/**/*.sh
 output_dir/
 wandb/
 
@@ -27,3 +30,4 @@ exp*.log
 *.pb
 *.bin
 *.safetensors
+*.npy

@@ -72,6 +72,9 @@ if is_peft_available():
 
 if is_wandb_available():
     import wandb
+
+from exploration_tracking import RolloutTracker #
+
 # What we call a reward function is a callable that takes a list of prompts and completions and returns a list of
 # rewards. When it's a string, it's a model ID, so it's loaded as a pretrained model.
 RewardFunc = Union[str, PreTrainedModel, Callable[[list, list], list[float]]]
@@ -378,6 +381,13 @@ class ReReTrainer(Trainer):
 
         self.prompt2history = prompt2history
         self.history2target = history2target
+        self.rollout_tracker = RolloutTracker(
+            prompt2history=prompt2history,
+            history2target=history2target,
+            num_tracked_users=100,
+            log_every_n_steps=10,
+            seed=args.seed,
+        )
         self.add_gt = add_gt
         self.beam_search = beam_search
         self.info_file = info_file
@@ -911,7 +921,24 @@ class ReReTrainer(Trainer):
                 completions.append([{"role": "assistant", "content": bootstrap + completion}])
         else:
             completions = completions_text
-        
+
+        ## 
+        # --- Exploration tracking ---
+        if hasattr(self, 'rollout_tracker'):
+            if not (self.add_gt or self.test_during_training or self.dynamic_sampling):
+                _histories = [self.prompt2history[x["prompt"]] for x in inputs]
+                _targets = [self.history2target[x] for x in _histories]
+            else:
+                _targets = targets
+            self.rollout_tracker.log_rollouts(
+                step=self.state.global_step,
+                prompts=prompts,
+                completions_text=completions_text,
+                targets=_targets,
+                num_generations=self.num_generations,
+            )        
+
+
         div_lis = [len(set(completions_text[i:i+self.num_generations]))/self.num_generations for i in range(0, len(completions_text), self.num_generations)]
         # cate_diversity = len(set(completions_text))/len(completions_text)
         cate_diversity = sum(div_lis)/len(div_lis)
@@ -1080,6 +1107,13 @@ class ReReTrainer(Trainer):
         # start with "eval_". We need to add the prefix "eval_" to the keys in `metrics` to match the format.
         if next(iter(logs.keys())).startswith("eval_"):
             metrics = {f"eval_{key}": val for key, val in metrics.items()}
+
+        ##
+        if hasattr(self, 'rollout_tracker'):
+            exploration_metrics = self.rollout_tracker.get_metrics(
+                step=self.state.global_step if hasattr(self.state, 'global_step') else 0
+            )
+            metrics.update(exploration_metrics)
 
         logs = {**logs, **metrics}
         if version.parse(transformers.__version__) >= version.parse("4.47.0.dev0"):

@@ -31,15 +31,14 @@ from torch.utils.data import ConcatDataset
 
 
 class TokenExtender:
-    def __init__(self, data_path, dataset, index_file=".index.json"):
-        self.data_path = data_path
-        self.dataset = dataset
-        self.index_file = index_file
+    def __init__(self, data_path=None, dataset=None, index_file=".index.json", index_path=None):
+        # Prefer an explicit full path; fall back to {data_path}/{dataset}{index_file}.
+        self.index_path = index_path or os.path.join(data_path, dataset + index_file)
         self.indices = None
         self.new_tokens = None
-        
+
     def _load_data(self):
-        with open(os.path.join(self.data_path, self.dataset + self.index_file), 'r') as f:
+        with open(self.index_path, 'r') as f:
             self.indices = json.load(f)
     
     def get_new_tokens(self):
@@ -111,6 +110,7 @@ def train(
     # wandb params
     wandb_project: str = "",
     wandb_run_name: str = "",
+    wandb_group_name: str = "",
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     category: str="",
     train_from_scratch: bool = False,
@@ -119,6 +119,8 @@ def train(
 ):
     set_seed(seed)
     os.environ['WANDB_PROJECT'] = wandb_project
+    if wandb_group_name:
+        os.environ['WANDB_RUN_GROUP'] = wandb_group_name
     category_dict = {"Industrial_and_Scientific": "industrial and scientific items", "Office_Products": "office products", "Toys_and_Games": "toys and games", "Sports": "sports and outdoors", "Books": "books"}
     print(category)
     category = category_dict[category]
@@ -151,10 +153,7 @@ def train(
     
     if sid_index_path and os.path.exists(sid_index_path):
         print(f"Loading index from {sid_index_path}")
-        token_extender = TokenExtender(
-            data_path=os.path.dirname(sid_index_path),
-            dataset=os.path.basename(sid_index_path).split('.')[0]
-        )
+        token_extender = TokenExtender(index_path=sid_index_path)
         new_tokens = token_extender.get_new_tokens()
         if new_tokens:
             print(f"Adding {len(new_tokens)} new tokens to tokenizer")
@@ -251,8 +250,7 @@ def train(
             save_total_limit=1,
             load_best_model_at_end=True,
             ddp_find_unused_parameters=False if ddp else None,
-            group_by_length=group_by_length,
-            report_to=None,
+            report_to="wandb",
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True

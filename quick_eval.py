@@ -239,10 +239,11 @@ def main(
 if __name__ == "__main__":
 
     # output_dir = "./output_dir"
-    output_dir = "./output_dir/Qwen2.5-1.5B_RL/ep4"
-    output_tsv = "eval_results_rl_ep4.tsv"
+    ep_num = 8
+    output_dir = f"./output_dir/Qwen3-1.7B_RL/ep{ep_num}"
+    output_tsv = f"eval_results_rl_ep{ep_num}.tsv"
     category = "Industrial_and_Scientific"
-    batch_size = 128
+    batch_size = 64
 
 
     main(output_dir=output_dir, output_tsv=output_tsv, category=category, batch_size=batch_size)

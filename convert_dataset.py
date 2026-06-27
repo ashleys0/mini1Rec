@@ -10,16 +10,16 @@ import os
 from typing import Dict, List, Any
 import argparse
 
-def load_dataset(data_dir: str, dataset_name: str) -> Dict[str, Any]:
+def load_dataset(data_dir: str, dataset_name: str, index_file: str = '.index.json') -> Dict[str, Any]:
     """Load all dataset files"""
     data = {}
-    
+
     # Load item metadata (id -> {title, description, ...})
     with open(os.path.join(data_dir, f'{dataset_name}.item.json'), 'r') as f:
         data['items'] = json.load(f)
-    
-    # Load item_id to semantic tokens mapping from index.json
-    with open(os.path.join(data_dir, f'{dataset_name}.index.json'), 'r') as f:
+
+    # Load item_id to semantic tokens mapping from the index file
+    with open(os.path.join(data_dir, f'{dataset_name}{index_file}'), 'r') as f:
         data['item_to_semantic'] = json.load(f)
     
     # Load train/valid/test splits
@@ -164,6 +164,8 @@ def main():
                        help='Path to dataset directory')
     parser.add_argument('--dataset_name', type=str, default='Industrial_and_Scientific',
                        help='Dataset name (Office_Products, Industrial_and_Scientific)')
+    parser.add_argument('--index_file', type=str, default='.index.json',
+                       help='Suffix of the SID index file, e.g. .index.json or .opq.index.json')
     parser.add_argument('--output_dir', type=str,
                        help='Output directory for MiniOneRec format data')
     parser.add_argument('--category', type=str, default=None,
@@ -184,7 +186,7 @@ def main():
         args.category = args.dataset_name
     
     print(f"Loading {args.dataset_name} data from {args.data_dir}")
-    dataset_data = load_dataset(args.data_dir, args.dataset_name)
+    dataset_data = load_dataset(args.data_dir, args.dataset_name, args.index_file)
     
     print(f"Found {len(dataset_data['items'])} items")
     print(f"Found {len(dataset_data['item_to_semantic'])} item-to-semantic mappings")
