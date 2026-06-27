@@ -23,9 +23,17 @@
 set seed: 22
 encoder: Qwen/Qwen3-Embedding-8B
 
+
+
+train code breaks with transformers > 5. stick with 4.57.1
+installing for cuda 12.8:
+the MiniOneRec authors used cu130. the requirements.txt has been updated accordingly. use:
+
+`uv pip install -r requirements.txt --index-strategy unsafe-best-match` 
+
 ---
 
-copied from MiniOneRec:
+### the rest copied from MiniOneRec:
 **An Open-Source Framework for
 Scaling Generative Recommendation**
 
